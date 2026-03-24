@@ -5,10 +5,8 @@ from datetime import datetime
 
 from app.core.database import get_db, redis_client
 from app.models.url import URL, Click
-from app.schemas.url import URLCreate, URLResponse
+from app.schemas.url import URLCreate, URLResponse, ClickResponse, AnalyticsResponse
 from app.core.utils import generate_short_code, parse_user_agent
-from app.models.click import ClickResponse
-from app.schemas.click import ClickResponse as ClickResponseSchema
 
 router = APIRouter()
 
