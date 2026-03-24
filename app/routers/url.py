@@ -7,6 +7,8 @@ from app.core.database import get_db, redis_client
 from app.models.url import URL, Click
 from app.schemas.url import URLCreate, URLResponse
 from app.core.utils import generate_short_code, parse_user_agent
+from app.models.click import ClickResponse
+from app.schemas.click import ClickResponse as ClickResponseSchema
 
 router = APIRouter()
 
@@ -107,3 +109,29 @@ def redirect_url(short_code: str, request: Request, db: Session = Depends(get_db
         db.commit()
 
     return RedirectResponse(url=original_url, status_code=302)
+
+
+@router.get("/{short_code}/analytics", response_model=AnalyticsResponse)
+def get_analytics(short_code: str, db: Session = Depends(get_db)):
+    """Get analytics for a specific short URL."""
+
+    url_obj = db.query(URL).filter(
+        (URL.short_code == short_code) | (URL.custom_alias == short_code),
+        URL.is_active == True
+    ).first()
+
+    if not url_obj:
+        raise HTTPException(status_code=404, detail="Short URL not found")
+
+    # Check expiry
+    if url_obj.expires_at and url_obj.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=410, detail="This URL has expired")
+
+    clicks = db.query(Click).filter(Click.url_id == url_obj.id).all()
+
+    return {
+        "short_code": url_obj.short_code,
+        "original_url": url_obj.original_url,
+        "total_clicks": len(clicks),
+        "clicks": [click.to_dict() for click in clicks]
+    }
