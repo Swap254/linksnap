@@ -38,7 +38,12 @@ def shorten_url(payload: URLCreate, db: Session = Depends(get_db)):
     db.refresh(url)
 
     # Cache in Redis (TTL: 24 hours)
-    redis_client.setex(short_code, 86400, str(payload.original_url))
+    try:
+        redis_client.setex(short_code, 86400, str(payload.original_url))
+    except Exception as e:
+        # Log but don't fail the request if Redis caching fails
+        print(f"Redis cache error: {e}")
+        pass
 
     return URLResponse(
         short_code=url.short_code,
@@ -55,7 +60,13 @@ def redirect_url(short_code: str, request: Request, db: Session = Depends(get_db
     """Redirect to original URL and track click analytics."""
 
     # Check Redis cache first
-    cached_url = redis_client.get(short_code)
+    cached_url = None
+    try:
+        cached_url = redis_client.get(short_code)
+    except Exception as e:
+        # Log but continue if Redis is unavailable
+        print(f"Redis get error: {e}")
+        pass
 
     if cached_url:
         original_url = cached_url
@@ -75,7 +86,11 @@ def redirect_url(short_code: str, request: Request, db: Session = Depends(get_db
 
         original_url = url_obj.original_url
         # Re-cache
-        redis_client.setex(short_code, 86400, original_url)
+        try:
+            redis_client.setex(short_code, 86400, original_url)
+        except Exception as e:
+            print(f"Redis setex error: {e}")
+            pass
 
     # Track click
     url_obj = db.query(URL).filter(URL.short_code == short_code).first()
