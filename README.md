@@ -86,9 +86,12 @@ GET /{short_code}
 Redirects to the original URL and tracks the click.
 
 ### Get Analytics
+Use this endpoint (preferred) for click reports:
 ```http
 GET /analytics/{short_code}
 ```
+
+> Note: `GET /{short_code}/analytics` is redundant and removed in this version.
 
 **Response:**
 ```json
