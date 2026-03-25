@@ -1,5 +1,9 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
+
 from app.routers import url, analytics
 from app.core.database import Base, engine
 

@@ -39,13 +39,24 @@ linksnap/
 ## Getting Started
 
 ### Prerequisites
-- Docker & Docker Compose installed
+- Python 3.11+
+- Optional: Docker & Docker Compose (for Postgres + Redis)
 
-### Run with Docker
+### Run without Docker (simple / Codespaces-friendly)
+
+This project can run with a local SQLite database file (`linksnap.db`) and will still work even if Redis is not running (it will just skip caching).
 
 ```bash
-git clone https://github.com/yourusername/linksnap.git
-cd linksnap
+pip install -r requirements.txt
+cp .env.example .env
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+API will be available at `http://localhost:8000`
+
+### Run with Docker (Postgres + Redis)
+
+```bash
 cp .env.example .env
 docker-compose up --build
 ```
